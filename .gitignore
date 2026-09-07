@@ -1,0 +1,4 @@
+.venv/
+__pycache__/
+telemetry_predictive.json
+telemetry.json
