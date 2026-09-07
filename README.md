@@ -7,7 +7,7 @@ The predictive controller uses current environmental data to anticipate irrigati
 
 *   **Models moisture decay:** 
     $$M(t) = M_\infty + (M_0 - M_\infty) \cdot e^{-\lambda \cdot t}$$ 
-    *(where $\lambda \propto ETa$)*
+    *(where λ ∝ ETa)*
 *   **Proactive triggering:** Predicts when soil will hit the critical threshold.
 *   **Anticipatory start:** Starts irrigation early (at ~45-50% for an optimal ~55%).
 *   **Stable optimization:** Maintains smooth control, keeping moisture in the optimal zone ($\pm$ 5-10%).
