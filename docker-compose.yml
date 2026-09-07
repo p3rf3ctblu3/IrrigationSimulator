@@ -1,0 +1,68 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: mosquitto
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - mosquitto_data:/mosquitto/data
+    networks:
+      - irrigation
+
+  influxdb:
+    image: influxdb:2.7-alpine
+    container_name: influxdb
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: admin12345
+      DOCKER_INFLUXDB_INIT_ORG: noone
+      DOCKER_INFLUXDB_INIT_BUCKET: irrigation-automation
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: irrigation_token_123
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+    networks:
+      - irrigation
+
+  sensor-publisher:
+    build: .
+    container_name: sensor-publisher
+    depends_on:
+      - mosquitto
+    networks:
+      - irrigation
+    command: python3 sensor_publisher.py --broker mosquitto --port 1883 --interval 3
+
+  controller:
+    build: .
+    container_name: controller
+    depends_on:
+      - mosquitto
+      - influxdb
+    networks:
+      - irrigation
+    command: python3 irrigation_controller.py --broker mosquitto --port 1883
+
+  telegraf:
+    image: telegraf:latest
+    container_name: telegraf
+    depends_on:
+      - mosquitto
+      - influxdb
+    volumes:
+      - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    networks:
+      - irrigation
+    environment:
+      HOSTNAME: telegraf
+
+networks:
+  irrigation:
+    driver: bridge
+
+volumes:
+  mosquitto_data:
+  influxdb_data:
